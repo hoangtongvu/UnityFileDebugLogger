@@ -1,0 +1,19 @@
+{
+  "name": "com.darksun.unity-file-debug-logger",
+  "description": "A simple Unity log-to-file logger.",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "displayName": "Unity File Debug Logger",
+  "dependencies": {
+    "com.unity.collections": "2.4.0",
+	"com.unity.burst": "1.8.12"
+  },
+  "keywords": [
+    "Debug",
+	"Logging",
+	"File writer"
+  ],
+  "author": {
+    "name": "hoangtongvu"
+  }
+}
