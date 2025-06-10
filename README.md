@@ -67,5 +67,5 @@ TimeStamp, Id, LogType, Log
 
 ## Important Notes
 
-- This plug-in **is not Burst Compilable** due to `I/O operations`.
+- This plug-in **is not Burst Compilable** due to `I/O operations` and `System.DateTime.Now` access.
 - It is **safe** to place log code inside `[BurstCompile]` methods, but the log file will only written when **Burst Compilation is disabled**.
