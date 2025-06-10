@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace SourceGenerators
+namespace UnityFileDebugLoggerSourceGenerator
 {
     [Generator]
     public class BaseGenerator : ISourceGenerator
@@ -32,8 +32,8 @@ namespace SourceGenerators
 
                 var compilation = context.Compilation;
 
-                List<string> concreteLoggerNames = new();
-                List<string> concreteLoggerNamespaces = new();
+                var concreteLoggerNames = new List<string>();
+                var concreteLoggerNamespaces = new List<string>();
 
                 // Concrete loggers
                 foreach (var structDeclaration in receiver.ConcreteLoggerSyntaxes)
@@ -120,6 +120,7 @@ namespace SourceGenerators
             , string fixedStringNamespace)
         {
             string fixedStringIdentifier = $"{fixedStringNamespace}.{fixedStringTypeName}";
+            string timeDataIdentifier = "Unity.Core.TimeData";
 
             string sourceCode = $@"
 using System.Text;
@@ -128,22 +129,30 @@ using Unity.Collections;
 
 namespace {loggerNamespace}
 {{
+    [BurstCompile]
     public partial struct {loggerName}
     {{
         private static readonly FixedString32Bytes logHeader = ""TimeStamp, Id, LogType, Log"";
         private static readonly FixedString32Bytes defaultLogDirectory = ""FileDebugLoggerLogs/"";
         public readonly bool isInitialized;
+        public readonly NativeList<double> logTimeInfos;
         public readonly NativeList<{fixedStringIdentifier}> logs;
 
-        public {loggerName}(int initialCap, Allocator allocator)
+        public {loggerName}(int initialCap, Allocator allocator, bool isBurstLogger = false)
         {{
             this.isInitialized = true;
             this.logs = new(initialCap, allocator);
+            this.logTimeInfos = isBurstLogger ? new(initialCap, allocator) : new();
+
         }}
 
         public readonly void Clear() => this.logs.Clear();
 
-        public readonly void Dispose() => this.logs.Dispose();
+        public readonly void Dispose()
+        {{
+            this.logs.Dispose();
+            this.logTimeInfos.Dispose();
+        }}
 
         [BurstDiscard]
         public readonly void Log(in {fixedStringIdentifier} newLog) => this.BaseLog(in newLog, LogType.Log);
@@ -154,7 +163,8 @@ namespace {loggerNamespace}
         [BurstDiscard]
         public readonly void LogError(in {fixedStringIdentifier} newLog) => this.BaseLog(in newLog, LogType.Error);
 
-        private readonly void BaseLog(in {fixedStringIdentifier} newLog, LogType logType)
+        [BurstDiscard]
+        public readonly void BaseLog(in {fixedStringIdentifier} newLog, LogType logType)
         {{
             {fixedStringIdentifier} prefix = $""{{System.DateTime.Now.ToString(""HH:mm:ss"")}}, {{this.logs.Length}}, {{logType}}, "";
             prefix.Append(newLog);
@@ -180,6 +190,29 @@ namespace {loggerNamespace}
 
         }}
 
+        [BurstDiscard]
+        public readonly void Save(in FixedString64Bytes fileName, in {timeDataIdentifier} finalTimeData, bool append = false)
+        {{
+            var dateTimeNow = System.DateTime.Now;
+            int length = this.logs.Length;
+
+            StringBuilder stringBuilder = new();
+            stringBuilder.AppendLine(logHeader.ToString());
+
+            for (int i = 0; i < length; i++)
+            {{
+                var log = this.logs[i];
+                double elapsedSeconds = this.logTimeInfos[i];
+                var futureTime = dateTimeNow.AddSeconds(-finalTimeData.ElapsedTime + elapsedSeconds);
+
+                stringBuilder.Append($""{{futureTime.ToString(""HH:mm:ss"")}}, "");
+                stringBuilder.AppendLine(log.ToString());
+            }}
+
+            FileWriter.Write(defaultLogDirectory + fileName.ToString(), stringBuilder.ToString(), append);
+
+        }}
+
     }}
 
 }}
@@ -187,6 +220,63 @@ namespace {loggerNamespace}
 
             context.AddSource($"{loggerName}.g.cs", sourceCode);
 
+            this.GenerateBurstCompileLoggingMethods(
+                context
+                , loggerName
+                , loggerNamespace
+                , timeDataIdentifier
+                , fixedStringIdentifier);
+
+        }
+
+        private void GenerateBurstCompileLoggingMethods(GeneratorExecutionContext context
+            , string loggerName
+            , string loggerNamespace
+            , string timeDataIdentifier
+            , string fixedStringIdentifier)
+        {
+            var stringBuilder = new StringBuilder();
+
+            stringBuilder.AppendLine("using Unity.Burst;");
+            stringBuilder.AppendLine("using Unity.Collections;");
+            stringBuilder.AppendLine();
+            stringBuilder.AppendLine($"namespace {loggerNamespace}");
+            stringBuilder.AppendLine("{");
+
+            stringBuilder.AppendLine($"\tpublic partial struct {loggerName}");
+            stringBuilder.AppendLine("\t{");
+
+            stringBuilder.AppendLine(this.GetBurstCompileLoggingMethodSrc("Log", "Log", timeDataIdentifier, fixedStringIdentifier));
+            stringBuilder.AppendLine();
+            stringBuilder.AppendLine(this.GetBurstCompileLoggingMethodSrc("LogWarning", "Warning", timeDataIdentifier, fixedStringIdentifier));
+            stringBuilder.AppendLine();
+            stringBuilder.AppendLine(this.GetBurstCompileLoggingMethodSrc("LogError", "Error", timeDataIdentifier, fixedStringIdentifier));
+
+            stringBuilder.AppendLine("\t}");
+
+            stringBuilder.AppendLine("}");
+
+            context.AddSource($"{loggerName}.burst-methods.g.cs", stringBuilder.ToString());
+        }
+
+        private string GetBurstCompileLoggingMethodSrc(
+            string methodName
+            , string logTypeIdentifier
+            , string timeDataIdentifier
+            , string fixedStringIdentifier)
+        {
+            string src = $@"        [BurstCompile]
+        public readonly void {methodName}(in {timeDataIdentifier} timeData, in {fixedStringIdentifier} newLog)
+        {{
+            Unity.Collections.FixedString128Bytes prefix = $""{{this.logs.Length}}, {logTypeIdentifier}, "";
+            prefix.Append(newLog);
+
+            this.logs.Add(prefix);
+            this.logTimeInfos.Add(timeData.ElapsedTime);
+        }}
+";
+
+            return src;
         }
 
         private void GeneratePartialPartMainContainer(
@@ -196,7 +286,7 @@ namespace {loggerNamespace}
             , List<string> loggerNames
             , List<string> loggerNamespaces)
         {
-            StringBuilder stringBuilder = new();
+            var stringBuilder = new StringBuilder();
 
             stringBuilder.AppendLine($"using Unity.Collections;");
             stringBuilder.AppendLine();
@@ -208,7 +298,7 @@ namespace {loggerNamespace}
             int length = loggerNames.Count;
             for (int i = 0; i < length; i++)
             {
-                stringBuilder.AppendLine($"\t\tpublic static {loggerNamespaces[i]}.{loggerNames[i]} Create{loggerNames[i]}(int initialCap, Allocator allocator) => new(initialCap, allocator); \n");
+                stringBuilder.AppendLine($"\t\tpublic static {loggerNamespaces[i]}.{loggerNames[i]} Create{loggerNames[i]}(int initialCap, Allocator allocator, bool isBurstLogger = false) => new(initialCap, allocator, isBurstLogger); \n");
             }
 
             stringBuilder.AppendLine("\t}");

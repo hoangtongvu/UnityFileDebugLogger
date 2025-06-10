@@ -11,6 +11,12 @@ namespace Systems.Initialization
         {
         }
 
+        protected override void OnStopRunning()
+        {
+            FixedString128Bytes msg = $"TestSystemBaseLogs.csv created, final ElapsedTime: {SystemAPI.Time.ElapsedTime}";
+            UnityEngine.Debug.Log(msg);
+        }
+
         protected override void OnUpdate()
         {
             this.Enabled = false;

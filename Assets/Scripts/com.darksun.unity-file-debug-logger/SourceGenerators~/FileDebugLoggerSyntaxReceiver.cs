@@ -4,11 +4,11 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SourceGenerators
+namespace UnityFileDebugLoggerSourceGenerator
 {
     public class FileDebugLoggerSyntaxReceiver : ISyntaxReceiver
     {
-        public StructDeclarationSyntax? MainContainerSyntax { get; private set; }
+        public StructDeclarationSyntax MainContainerSyntax { get; private set; }
         public List<StructDeclarationSyntax> ConcreteLoggerSyntaxes { get; } = new List<StructDeclarationSyntax>();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)

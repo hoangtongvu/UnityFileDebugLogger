@@ -6,7 +6,8 @@
   "displayName": "Unity File Debug Logger",
   "dependencies": {
     "com.unity.collections": "2.4.0",
-	"com.unity.burst": "1.8.12"
+	"com.unity.burst": "1.8.12",
+	"com.unity.entities": "1.2.0"
   },
   "keywords": [
     "Debug",
