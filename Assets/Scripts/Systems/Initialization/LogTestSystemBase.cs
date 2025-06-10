@@ -26,9 +26,9 @@ namespace Systems.Initialization
 
             for (int i = 0; i < loopCount; i++)
             {
-                fileDebugLogger.Log("This is normal log.");
-                fileDebugLogger.LogWarning("This is warning log.");
-                fileDebugLogger.LogError("This is error log.");
+                fileDebugLogger.Log("This is a normal log.");
+                fileDebugLogger.LogWarning("This is a warning log.");
+                fileDebugLogger.LogError("This is an error log.");
             }
 
             fileDebugLogger.Save("TestSystemBaseLogs.csv");

@@ -11,19 +11,20 @@ To install, paste the following URL into Unity's **Package Manager**:
 1. Open **Package Manager**.
 2. Click the **+** button.
 3. Select **"Add package from git URL..."**.
-4. Enter the following url:
+4. Enter the following URL:
 ```bash
 https://github.com/hoangtongvu/UnityFileDebugLogger.git?path=/Assets/Scripts/com.darksun.unity-file-debug-logger
 ```
 
 ## How to use
 
-See example usage in:
-- [LogTestSystemBase](Assets/Scripts/Systems/Initialization/LogTestSystemBase.cs)
-- [LogTestISystemWithBurst](Assets/Scripts/Systems/Initialization/LogTestISystemWithBurst.cs)
+<details>
+  <summary>General logging usecase</summary>
+  
+See [LogTestSystemBase](Assets/Scripts/Systems/Initialization/LogTestSystemBase.cs) for full details.
 
 ### 1. Create a Logger
-Choose your approriate `FixedString` size and create the logger:
+Choose your appropriate `FixedString` size and create the logger:
 
 ```cs
 var fileDebugLogger = FileDebugLogger.CreateLogger4096Bytes(initialCap, allocator);
@@ -65,7 +66,49 @@ The log will be saved to the `FileDebugLoggerLogs` folder:
 TimeStamp, Id, LogType, Log
 ```
 
-## Important Notes
+</details>
 
-- This plug-in **is not Burst Compilable** due to `I/O operations` and `System.DateTime.Now` access.
-- It is **safe** to place log code inside `[BurstCompile]` methods, but the log file will only written when **Burst Compilation is disabled**.
+<details>
+  <summary>BurstCompile logging usecase</summary>
+  
+See [LogTestISystemWithBurst example](Assets/Scripts/Systems/Initialization/LogTestISystemWithBurst.cs) for full details.
+
+### 1. Create a logger
+
+```cs
+[BurstCompile]
+public partial struct LogTestISystemWithBurst : ISystem, ISystemStartStop
+{
+    private Logger128Bytes fileDebugLogger;
+
+    [BurstCompile]
+    public void OnCreate(ref SystemState state)
+    {
+        this.fileDebugLogger = FileDebugLogger.CreateLogger128Bytes(10, Allocator.Persistent, true);
+    }
+}
+```
+
+### 2. Add logs
+
+```cs
+[BurstCompile]
+public void OnUpdate(ref SystemState state)
+{
+    this.fileDebugLogger.Log(in timeData, $"This is normal log.");
+}
+```
+
+### 3. Finally, save the log
+
+`Save()` is normally placed in `OnStopRunning()` or `OnDestroy()` without `[BurstCompile]` because it involves `I/O operations` and `System.DateTime.Now` access.
+
+```cs
+public void OnStopRunning(ref SystemState state)
+{
+    this.fileDebugLogger.Save("TestISystemLogs.csv", in SystemAPI.Time);
+    this.fileDebugLogger.Dispose();
+}
+```
+
+</details>

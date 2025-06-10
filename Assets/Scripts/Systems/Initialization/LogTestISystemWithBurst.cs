@@ -52,15 +52,15 @@ namespace Systems.Initialization
             this.timeCounterSeconds += SystemAPI.Time.DeltaTime;
             var timeData = SystemAPI.Time;
 
-            this.fileDebugLogger.Log(in timeData, $"This is normal log before {this.timeLimitSeconds}s.");
+            this.fileDebugLogger.Log(in timeData, $"This is a normal log before {this.timeLimitSeconds}s.");
 
             if (this.timeCounterSeconds < this.timeLimitSeconds) return;
 
             state.Enabled = false;
 
-            this.fileDebugLogger.Log(in timeData, $"This is normal log after {this.timeLimitSeconds}s.");
-            this.fileDebugLogger.LogWarning(in timeData, $"This is warning log after {this.timeLimitSeconds}s.");
-            this.fileDebugLogger.LogError(in timeData, $"This is error log after {this.timeLimitSeconds}s.");
+            this.fileDebugLogger.Log(in timeData, $"This is a normal log after {this.timeLimitSeconds}s.");
+            this.fileDebugLogger.LogWarning(in timeData, $"This is a warning log after {this.timeLimitSeconds}s.");
+            this.fileDebugLogger.LogError(in timeData, $"This is an error log after {this.timeLimitSeconds}s.");
 
         }
 
