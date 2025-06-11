@@ -37,10 +37,10 @@ namespace Systems.Initialization
 
         public void OnStopRunning(ref SystemState state)
         {
-            this.fileDebugLogger.Save("TestISystemLogs.csv", in SystemAPI.Time);
+            this.fileDebugLogger.Save("TestISystemLogs.txt", in SystemAPI.Time);
             this.fileDebugLogger.Dispose();
 
-            FixedString128Bytes msg = $"TestISystemLogs.csv created, final ElapsedTime: {SystemAPI.Time.ElapsedTime}";
+            FixedString128Bytes msg = $"TestISystemLogs.txt created, final ElapsedTime: {SystemAPI.Time.ElapsedTime}";
             UnityEngine.Debug.Log(msg);
 
         }

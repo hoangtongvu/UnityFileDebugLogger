@@ -13,7 +13,7 @@ namespace Systems.Initialization
 
         protected override void OnStopRunning()
         {
-            FixedString128Bytes msg = $"TestSystemBaseLogs.csv created, final ElapsedTime: {SystemAPI.Time.ElapsedTime}";
+            FixedString128Bytes msg = $"TestSystemBaseLogs.txt created, final ElapsedTime: {SystemAPI.Time.ElapsedTime}";
             UnityEngine.Debug.Log(msg);
         }
 
@@ -31,7 +31,7 @@ namespace Systems.Initialization
                 fileDebugLogger.LogError("This is an error log.");
             }
 
-            fileDebugLogger.Save("TestSystemBaseLogs.csv");
+            fileDebugLogger.Save("TestSystemBaseLogs.txt");
 
         }
 

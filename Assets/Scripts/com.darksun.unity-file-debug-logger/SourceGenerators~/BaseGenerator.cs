@@ -11,6 +11,10 @@ namespace UnityFileDebugLoggerSourceGenerator
     [Generator]
     public class BaseGenerator : ISourceGenerator
     {
+        const int timePrefixCharCount = 8;
+        const int logIdOffset = 3;
+        const int logTypeOffset = 7;
+
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new FileDebugLoggerSyntaxReceiver());
@@ -166,7 +170,7 @@ namespace {loggerNamespace}
         [BurstDiscard]
         public readonly void BaseLog(in {fixedStringIdentifier} newLog, LogType logType)
         {{
-            {fixedStringIdentifier} prefix = $""{{System.DateTime.Now.ToString(""HH:mm:ss"")}}, {{this.logs.Length}}, {{logType}}, "";
+            {fixedStringIdentifier} prefix = $""{{System.DateTime.Now.ToString(""HH:mm:ss""), {timePrefixCharCount}}} | {{this.logs.Length, {logIdOffset}}} | {{logType, {logTypeOffset}}} | "";
             prefix.Append(newLog);
 
             this.logs.Add(prefix);
@@ -178,7 +182,6 @@ namespace {loggerNamespace}
             int length = this.logs.Length;
 
             StringBuilder stringBuilder = new();
-            stringBuilder.AppendLine(logHeader.ToString());
 
             for (int i = 0; i < length; i++)
             {{
@@ -197,7 +200,6 @@ namespace {loggerNamespace}
             int length = this.logs.Length;
 
             StringBuilder stringBuilder = new();
-            stringBuilder.AppendLine(logHeader.ToString());
 
             for (int i = 0; i < length; i++)
             {{
@@ -205,7 +207,7 @@ namespace {loggerNamespace}
                 double elapsedSeconds = this.logTimeInfos[i];
                 var futureTime = dateTimeNow.AddSeconds(-finalTimeData.ElapsedTime + elapsedSeconds);
 
-                stringBuilder.Append($""{{futureTime.ToString(""HH:mm:ss"")}}, "");
+                stringBuilder.Append($""{{futureTime.ToString(""HH:mm:ss""), {timePrefixCharCount}}} | "");
                 stringBuilder.AppendLine(log.ToString());
             }}
 
@@ -268,7 +270,7 @@ namespace {loggerNamespace}
             string src = $@"        [BurstCompile]
         public readonly void {methodName}(in {timeDataIdentifier} timeData, in {fixedStringIdentifier} newLog)
         {{
-            Unity.Collections.FixedString128Bytes prefix = $""{{this.logs.Length}}, {logTypeIdentifier}, "";
+            Unity.Collections.FixedString128Bytes prefix = $""{{this.logs.Length, {logIdOffset}}} | {logTypeIdentifier, logTypeOffset} | "";
             prefix.Append(newLog);
 
             this.logs.Add(prefix);

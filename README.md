@@ -2,7 +2,7 @@
 
 ## Introduction
 
-**UnityFileDebugLogger** is a simple Unity logger that logs messages to CSV-formatted file.
+**UnityFileDebugLogger** is a simple Unity logger that logs messages to Table-formatted txt file.
 
 ## Installation
 
@@ -20,7 +20,7 @@ https://github.com/hoangtongvu/UnityFileDebugLogger.git?path=/Assets/Scripts/com
 
 <details>
   <summary>General logging usecase</summary>
-  
+
 See [LogTestSystemBase](Assets/Scripts/Systems/Initialization/LogTestSystemBase.cs) for full details.
 
 ### 1. Create a Logger
@@ -45,15 +45,15 @@ Supported options:
 You can save logs to the internal `NativeList` using the following methods:
 
 ```cs
-fileDebugLogger.Log("This is normal log.");
-fileDebugLogger.LogWarning("This is warning log.");
-fileDebugLogger.LogError("This is error log.");
+fileDebugLogger.Log("This is a normal log.");
+fileDebugLogger.LogWarning("This is a warning log.");
+fileDebugLogger.LogError("This is an error log.");
 ```
 
 ### 3. Finally, save the log
 
 ```cs
-fileDebugLogger.Save("logfileName.csv");
+fileDebugLogger.Save("logfileName.txt");
 ```
 
 The log will be saved to the `FileDebugLoggerLogs` folder:
@@ -61,9 +61,9 @@ The log will be saved to the `FileDebugLoggerLogs` folder:
 %USERPROFILE%\AppData\LocalLow\<CompanyName>\<ProjectName>\FileDebugLoggerLogs\
 ```
 
-**Note**: You can use any file extension, but logs will always follow this CSV structure:
+**Note**: You can use any file extension, but logs will always follow this structure:
 ```pgsql
-TimeStamp, Id, LogType, Log
+TimeStamp | Id | LogType | Log
 ```
 
 </details>
@@ -95,7 +95,7 @@ public partial struct LogTestISystemWithBurst : ISystem, ISystemStartStop
 [BurstCompile]
 public void OnUpdate(ref SystemState state)
 {
-    this.fileDebugLogger.Log(in timeData, $"This is normal log.");
+    this.fileDebugLogger.Log(in timeData, $"This is a normal log.");
 }
 ```
 
@@ -106,7 +106,7 @@ public void OnUpdate(ref SystemState state)
 ```cs
 public void OnStopRunning(ref SystemState state)
 {
-    this.fileDebugLogger.Save("TestISystemLogs.csv", in SystemAPI.Time);
+    this.fileDebugLogger.Save("TestISystemLogs.txt", in SystemAPI.Time);
     this.fileDebugLogger.Dispose();
 }
 ```
