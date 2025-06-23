@@ -13,7 +13,7 @@ To install, paste the following URL into Unity's **Package Manager**:
 3. Select **"Add package from git URL..."**.
 4. Enter the following URL:
 ```bash
-https://github.com/hoangtongvu/UnityFileDebugLogger.git?path=/Assets/Scripts/com.darksun.unity-file-debug-logger
+https://github.com/hoangtongvu/UnityFileDebugLogger.git?path=/Assets/UnityFileDebugLogger
 ```
 
 ## How to use
