@@ -1,7 +1,7 @@
 {
   "name": "com.darksun.unity-file-debug-logger",
   "description": "A simple Unity log-to-file logger.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "unity": "2022.3",
   "displayName": "Unity File Debug Logger",
   "dependencies": {
